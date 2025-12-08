@@ -1,0 +1,128 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Product } from './data';
+
+// --- Cart Store ---
+
+interface CartItem extends Product {
+    quantity: number;
+}
+
+interface CartState {
+    items: CartItem[];
+    isOpen: boolean;
+    toggleCart: () => void;
+    // Methods expected by User's components
+    addItem: (product: Product) => void;
+    removeItem: (productId: string) => void;
+    updateQuantity: (productId: string, quantity: number) => void; // Keep for internal/drawer usage if needed, though User's component only used removeItem
+    clearCart: () => void;
+    total: () => number; // Renamed from totalPrice to match user code
+}
+
+export const useCartStore = create<CartState>((set, get) => ({
+    items: [],
+    isOpen: false,
+    toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+    addItem: (product) =>
+        set((state) => {
+            const existing = state.items.find((item) => item.id === product.id);
+            if (existing) {
+                return {
+                    items: state.items.map((item) =>
+                        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                    ),
+                    isOpen: true, // Auto open cart on add
+                };
+            }
+            return {
+                items: [...state.items, { ...product, price: Number(product.price), quantity: 1 }],
+                isOpen: true
+            };
+        }),
+    removeItem: (id) =>
+        set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
+    updateQuantity: (id, quantity) =>
+        set((state) => {
+            if (quantity <= 0) {
+                return { items: state.items.filter((item) => item.id !== id) }
+            }
+            return {
+                items: state.items.map((item) =>
+                    item.id === id ? { ...item, quantity } : item
+                ),
+            };
+        }),
+    clearCart: () => set({ items: [] }),
+    total: () => {
+        return get().items.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0);
+    },
+}));
+
+// --- User Store (Auth) ---
+
+interface User {
+    id: string;
+    email: string;
+    name: string;
+}
+
+interface UserState {
+    user: User | null;
+    login: (email: string, name: string) => void;
+    logout: () => void;
+}
+
+export const useUserStore = create<UserState>()(
+    persist(
+        (set) => ({
+            user: null,
+            login: (email, name) => set({ user: { id: 'mock-user-id', email, name } }),
+            logout: () => set({ user: null }),
+        }),
+        {
+            name: 'user-storage',
+        }
+    )
+);
+
+// --- Product Store (Admin) ---
+
+interface ProductState {
+    products: Product[];
+    setProducts: (products: Product[]) => void;
+    addProduct: (product: Omit<Product, 'id'>) => void;
+    updateProduct: (id: string, product: Partial<Product>) => void;
+    deleteProduct: (id: string) => void;
+}
+
+const INITIAL_PRODUCTS: Product[] = [
+    { id: '1', title: '部落衝突 14本滿防', price: 3500, category: '部落衝突', description: '全滿防禦，包含稀有造型，立即開戰！', image: 'https://placehold.co/600x400/2563eb/FFF?text=COC+Base', stock: 1 },
+    { id: '2', title: '荒野亂鬥 全英雄滿等', price: 5000, category: '荒野亂鬥', description: '擁有所有傳奇英雄，包含絕版造型。', image: 'https://placehold.co/600x400/e11d48/FFF?text=Brawl+Stars', stock: 1 },
+    { id: '3', title: '皇室戰爭 7000盃', price: 1200, category: '皇室戰爭', description: '高端帳號，全卡牌收集。', image: 'https://placehold.co/600x400/ca8a04/FFF?text=Clash+Royale', stock: 1 },
+    { id: '4', title: '特戰英豪 鑽石牌位', price: 2500, category: '其他遊戲', description: '內含多款紫金造型，排位高。', image: 'https://placehold.co/600x400/7c3aed/FFF?text=Valorant', stock: 1 },
+    { id: '5', title: '部落衝突 12本速本', price: 800, category: '部落衝突', description: '適合新手練習。', image: 'https://placehold.co/600x400/2563eb/FFF?text=COC+Starter', stock: 1 },
+];
+
+export const useProductStore = create<ProductState>()(
+    persist(
+        (set) => ({
+            products: INITIAL_PRODUCTS,
+            setProducts: (products) => set({ products }),
+            addProduct: (product) => set((state) => ({
+                products: [...state.products, { ...product, id: Date.now().toString() }]
+            })),
+            updateProduct: (id, updatedProduct) => set((state) => ({
+                products: state.products.map((p) => p.id === id ? { ...p, ...updatedProduct, price: updatedProduct.price ? Number(updatedProduct.price) : p.price } : p)
+            })),
+            deleteProduct: (id) => set((state) => ({
+                products: state.products.filter((p) => p.id !== id)
+            })),
+        }),
+        {
+            name: 'product-storage',
+            skipHydration: true,
+        }
+    )
+);
+
