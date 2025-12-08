@@ -79,6 +79,9 @@ export function generateNewebPayForm(order: { id: string; amount: number; email:
 
     const TimeStamp = Math.round(new Date().getTime() / 1000).toString();
 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+    if (!baseUrl) throw new Error('NEXT_PUBLIC_BASE_URL is missing');
+
     // Ensure strict types
     const tradeInfo = {
         MerchantID,
@@ -90,9 +93,9 @@ export function generateNewebPayForm(order: { id: string; amount: number; email:
         ItemDesc: order.desc,
         Email: order.email,
         LoginType: 0,
-        ReturnURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/return`,
-        NotifyURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/notify`,
-        ClientBackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
+        ReturnURL: `${baseUrl}/api/payment/return`,
+        NotifyURL: `${baseUrl}/api/payment/notify`,
+        ClientBackURL: `${baseUrl}/`,
     };
 
     const tradeInfoAes = createMpgAesEncrypt(tradeInfo);
