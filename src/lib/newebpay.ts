@@ -91,7 +91,7 @@ export function generateNewebPayForm(order: { id: string; amount: number; email:
         Email: order.email,
         LoginType: 0,
         ReturnURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/return`,
-        NotifyURL: `${process.env.NEWEB_API_URL}/api/payment/notify`,
+        NotifyURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/notify`,
         ClientBackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
     };
 
