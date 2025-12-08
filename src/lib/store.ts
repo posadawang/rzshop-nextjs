@@ -61,24 +61,65 @@ export const useCartStore = create<CartState>((set, get) => ({
 
 // --- User Store (Auth) ---
 
+interface Order {
+    id: string;
+    date: string;
+    items: { title: string; price: number; quantity: number }[];
+    total: number;
+}
+
 interface User {
     id: string;
     email: string;
+    password?: string; // For mock auth validation
     name: string;
+    orders: Order[];
 }
 
 interface UserState {
     user: User | null;
-    login: (email: string, name: string) => void;
+    registeredUsers: User[]; // Persistence for "database"
+    login: (email: string, password: string) => boolean;
+    register: (email: string, password: string, name: string) => boolean;
     logout: () => void;
+    addOrder: (order: Order) => void;
 }
 
 export const useUserStore = create<UserState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             user: null,
-            login: (email, name) => set({ user: { id: 'mock-user-id', email, name } }),
+            registeredUsers: [],
+            login: (email, password) => {
+                const user = get().registeredUsers.find(u => u.email === email && u.password === password);
+                if (user) {
+                    set({ user });
+                    return true;
+                }
+                return false;
+            },
+            register: (email, password, name) => {
+                if (get().registeredUsers.some(u => u.email === email)) {
+                    return false; // Email exists
+                }
+                const newUser = { id: Date.now().toString(), email, password, name, orders: [] };
+                set(state => ({
+                    registeredUsers: [...state.registeredUsers, newUser],
+                    user: newUser // Auto login
+                }));
+                return true;
+            },
             logout: () => set({ user: null }),
+            addOrder: (order) => set(state => {
+                if (!state.user) return {};
+                const updatedUser = { ...state.user, orders: [order, ...state.user.orders] };
+                // Also update the user in the registered list
+                const updatedList = state.registeredUsers.map(u => u.id === state.user!.id ? updatedUser : u);
+                return {
+                    user: updatedUser,
+                    registeredUsers: updatedList
+                };
+            }),
         }),
         {
             name: 'user-storage',

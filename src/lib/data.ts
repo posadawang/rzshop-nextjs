@@ -5,6 +5,7 @@ export interface Product {
     price: number;
     category: string;
     image: string;
+    images?: string[]; // Multiple images support
     stock?: number;
     originalPrice?: number;
 }

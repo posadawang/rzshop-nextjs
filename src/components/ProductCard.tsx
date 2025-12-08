@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCartStore } from '@/lib/store';
 
 interface Product {
@@ -21,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
     return (
         <div className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:-translate-y-1">
             {/* 圖片區域 */}
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+            <Link href={`/products/${product.id}`} className="block relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
                 <Image
                     src={product.image}
                     alt={product.title}
@@ -36,11 +37,13 @@ export default function ProductCard({ product }: { product: Product }) {
                         <span className="text-white font-bold text-lg border-2 border-white px-4 py-1 rounded">缺貨中</span>
                     </div>
                 )}
-            </div>
+            </Link>
 
             {/* 內容區域 */}
             <div className="p-4 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h3>
+                <Link href={`/products/${product.id}`} className="hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h3>
+                </Link>
                 <p className="text-sm text-gray-500 mb-4 line-clamp-2 flex-1">{product.description}</p>
 
                 <div className="flex items-center justify-between mt-auto">

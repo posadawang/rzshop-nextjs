@@ -3,15 +3,31 @@
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import { useEffect } from 'react';
-import { useCartStore } from '@/lib/store';
+import { useCartStore, useUserStore } from '@/lib/store';
 
 export default function SuccessPage() {
-    const clearCart = useCartStore((state) => state.clearCart);
+    const { items, clearCart, total } = useCartStore();
+    const { user, addOrder } = useUserStore();
 
-    // 進入此頁面時清空購物車
     useEffect(() => {
-        clearCart();
-    }, [clearCart]);
+        // Prevent double-run in React Strict Mode if cart is already empty
+        if (items.length > 0) {
+            if (user) {
+                const newOrder = {
+                    id: Date.now().toString(), // Simple ID
+                    date: new Date().toISOString(),
+                    items: items.map(i => ({
+                        title: i.title,
+                        price: i.price,
+                        quantity: i.quantity
+                    })),
+                    total: total()
+                };
+                addOrder(newOrder);
+            }
+            clearCart();
+        }
+    }, [items, clearCart, total, user, addOrder]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
