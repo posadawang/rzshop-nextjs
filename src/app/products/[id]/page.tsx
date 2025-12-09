@@ -11,19 +11,22 @@ import Link from 'next/link';
 export default function ProductDetail() {
     const params = useParams();
     const router = useRouter();
-    const { products } = useProductStore();
-    const [domLoaded, setDomLoaded] = useState(false);
+    const { products, fetchProducts } = useProductStore();
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Hydration fix
+    // Fetch data
     useEffect(() => {
-        useProductStore.persist.rehydrate();
-        setDomLoaded(true);
+        const load = async () => {
+            await fetchProducts();
+            setIsLoading(false);
+        };
+        load();
     }, []);
 
-    // Find product - only after hydration to ensure we have localStorage data
-    const product = domLoaded ? products.find(p => p.id === params.id) : null;
+    // Find product
+    const product = products.find(p => p.id === params.id);
 
-    if (!domLoaded) {
+    if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>;
     }
 

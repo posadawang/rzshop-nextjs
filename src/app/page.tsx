@@ -13,12 +13,16 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Use Product Store
-  const { products } = useProductStore();
-  const [domLoaded, setDomLoaded] = useState(false);
+  // Use Product Store
+  const { products, fetchProducts } = useProductStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    useProductStore.persist.rehydrate();
-    setDomLoaded(true);
+    const load = async () => {
+      await fetchProducts();
+      setIsLoading(false);
+    };
+    load();
   }, []);
 
   // 篩選邏輯
@@ -37,7 +41,7 @@ export default function Home() {
   // Prevent hydration mismatch by returning null or a skeleton until mounted
   // For simplicity, we just render the structure but without products if not loaded, or just wait.
   // Ideally we show a loader.
-  if (!domLoaded) {
+  if (isLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
   }
 

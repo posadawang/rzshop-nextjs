@@ -23,13 +23,16 @@ export default function AdminPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState(initialFormState);
 
-    const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
-    const [domLoaded, setDomLoaded] = useState(false);
+    const { products, addProduct, updateProduct, deleteProduct, fetchProducts } = useProductStore();
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Hyradtion fix
+    // Fetch data
     useEffect(() => {
-        useProductStore.persist.rehydrate();
-        setDomLoaded(true);
+        const load = async () => {
+            await fetchProducts();
+            setIsLoading(false);
+        };
+        load();
     }, []);
 
     const handleLogin = (e: React.FormEvent) => {
@@ -156,7 +159,7 @@ export default function AdminPage() {
         setEditingId(null);
     };
 
-    if (!domLoaded) return null; // Avoid hydration mismatch
+    if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
     if (!isAuthenticated) {
         return (
