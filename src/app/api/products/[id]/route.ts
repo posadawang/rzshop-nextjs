@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import { updateProduct, deleteProduct, getProductById } from '@/lib/product-db';
+import { updateProduct, deleteProduct } from '@/lib/product-db';
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const body = await request.json();
-        // Since params is pending in Next.js 15+ in some contexts but params here is usually directly available in older style or via await
-        // Safe bet for standard route handlers:
-        const id = params.id;
+        // Next.js 15 requires awaiting params
+        const { id } = await params;
         const updated = await updateProduct(id, body);
 
         if (!updated) {
@@ -23,10 +22,10 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id;
+        const { id } = await params;
         await deleteProduct(id);
         return NextResponse.json({ success: true });
     } catch (error) {
