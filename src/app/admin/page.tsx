@@ -41,30 +41,71 @@ export default function AdminPage() {
         }
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Image compression helper
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = document.createElement('img');
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // Compress to JPEG 0.7
+                };
+            };
+        });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({ ...formData, image: reader.result as string });
-            };
-            reader.readAsDataURL(file);
+            try {
+                const compressed = await compressImage(file);
+                setFormData({ ...formData, image: compressed });
+            } catch (error) {
+                console.error("Image upload failed", error);
+            }
         }
     };
 
-    const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setFormData(prev => ({
-                        ...prev,
-                        images: [...(prev.images || []), reader.result as string]
-                    }));
-                };
-                reader.readAsDataURL(file);
-            });
+            const newImages: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    const compressed = await compressImage(files[i]);
+                    newImages.push(compressed);
+                } catch (error) {
+                    console.error("Gallery upload failed", error);
+                }
+            }
+            setFormData(prev => ({
+                ...prev,
+                images: [...(prev.images || []), ...newImages]
+            }));
         }
     };
 
