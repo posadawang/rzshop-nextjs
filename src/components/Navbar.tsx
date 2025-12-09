@@ -65,20 +65,20 @@ export default function Navbar({ onSearch, onCategorySelect, onCartClick }: Navb
 
                             {/* Auth Buttons */}
                             {user ? (
-                                <div className="hidden md:flex items-center space-x-2">
-                                    <Link href="/profile" className="flex items-center space-x-1 border border-white/30 px-3 py-1.5 rounded bg-blue-700/50 text-sm hover:bg-blue-700 transition">
+                                <div className="flex items-center space-x-2">
+                                    <Link href="/profile" className="flex items-center space-x-1 border border-white/30 px-2 md:px-3 py-1.5 rounded bg-blue-700/50 text-sm hover:bg-blue-700 transition">
                                         <UserIcon className="w-4 h-4" />
-                                        <span>{user.name}</span>
+                                        <span className="hidden md:inline">{user.name}</span>
                                     </Link>
-                                    <button onClick={logout} className="flex items-center space-x-1 border border-white/50 px-3 py-1.5 rounded hover:bg-white hover:text-blue-600 transition text-sm">
+                                    <button onClick={logout} className="flex items-center space-x-1 border border-white/50 px-2 md:px-3 py-1.5 rounded hover:bg-white hover:text-blue-600 transition text-sm">
                                         <LogOut className="w-4 h-4" />
                                     </button>
                                 </div>
                             ) : (
-                                <div className="hidden md:flex items-center space-x-2">
-                                    <button onClick={handleLoginClick} className="flex items-center space-x-1 border border-white/50 px-3 py-1.5 rounded hover:bg-white hover:text-blue-600 transition text-sm">
+                                <div className="flex items-center space-x-2">
+                                    <button onClick={handleLoginClick} className="flex items-center space-x-1 border border-white/50 px-2 md:px-3 py-1.5 rounded hover:bg-white hover:text-blue-600 transition text-sm">
                                         <LogIn className="w-4 h-4" />
-                                        <span>登入 / 註冊</span>
+                                        <span className="hidden md:inline">登入 / 註冊</span>
                                     </button>
                                 </div>
                             )}

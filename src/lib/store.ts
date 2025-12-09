@@ -27,16 +27,18 @@ export const useCartStore = create<CartState>((set, get) => ({
     addItem: (product) =>
         set((state) => {
             const existing = state.items.find((item) => item.id === product.id);
+            const quantityToAdd = (product as any).quantity || 1;
+
             if (existing) {
                 return {
                     items: state.items.map((item) =>
-                        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                        item.id === product.id ? { ...item, quantity: item.quantity + quantityToAdd } : item
                     ),
-                    isOpen: true, // Auto open cart on add
+                    isOpen: true,
                 };
             }
             return {
-                items: [...state.items, { ...product, price: Number(product.price), quantity: 1 }],
+                items: [...state.items, { ...product, price: Number(product.price), quantity: quantityToAdd }],
                 isOpen: true
             };
         }),
@@ -132,10 +134,12 @@ export const useUserStore = create<UserState>()(
 interface ProductState {
     products: Product[];
     setProducts: (products: Product[]) => void;
-    addProduct: (product: Omit<Product, 'id'>) => void;
-    updateProduct: (id: string, product: Partial<Product>) => void;
-    deleteProduct: (id: string) => void;
+    fetchProducts: () => Promise<void>;
+    addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+    updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
+    deleteProduct: (id: string) => Promise<void>;
 }
+
 
 const INITIAL_PRODUCTS: Product[] = [
     { id: '1', title: '部落衝突 14本滿防', price: 3500, category: '部落衝突', description: '全滿防禦，包含稀有造型，立即開戰！', image: 'https://placehold.co/600x400/2563eb/FFF?text=COC+Base', stock: 1 },
@@ -145,25 +149,56 @@ const INITIAL_PRODUCTS: Product[] = [
     { id: '5', title: '部落衝突 12本速本', price: 800, category: '部落衝突', description: '適合新手練習。', image: 'https://placehold.co/600x400/2563eb/FFF?text=COC+Starter', stock: 1 },
 ];
 
-export const useProductStore = create<ProductState>()(
-    persist(
-        (set) => ({
-            products: INITIAL_PRODUCTS,
-            setProducts: (products) => set({ products }),
-            addProduct: (product) => set((state) => ({
-                products: [...state.products, { ...product, id: Date.now().toString() }]
-            })),
-            updateProduct: (id, updatedProduct) => set((state) => ({
-                products: state.products.map((p) => p.id === id ? { ...p, ...updatedProduct, price: updatedProduct.price ? Number(updatedProduct.price) : p.price } : p)
-            })),
-            deleteProduct: (id) => set((state) => ({
-                products: state.products.filter((p) => p.id !== id)
-            })),
-        }),
-        {
-            name: 'product-storage',
-            skipHydration: true,
+export const useProductStore = create<ProductState>((set, get) => ({
+    products: [],
+    setProducts: (products) => set({ products }),
+    fetchProducts: async () => {
+        try {
+            const res = await fetch('/api/products');
+            const data = await res.json();
+            set({ products: data });
+        } catch (error) {
+            console.error('Failed to fetch products:', error);
         }
-    )
-);
+    },
+    addProduct: async (product) => {
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product),
+            });
+            const newProduct = await res.json();
+            set((state) => ({ products: [...state.products, newProduct] }));
+        } catch (error) {
+            console.error('Failed to add product:', error);
+        }
+    },
+    updateProduct: async (id, updatedProduct) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedProduct),
+            });
+            const data = await res.json();
+            set((state) => ({
+                products: state.products.map((p) => (p.id === id ? data : p)),
+            }));
+        } catch (error) {
+            console.error('Failed to update product:', error);
+        }
+    },
+    deleteProduct: async (id) => {
+        try {
+            await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            set((state) => ({
+                products: state.products.filter((p) => p.id !== id),
+            }));
+        } catch (error) {
+            console.error('Failed to delete product:', error);
+        }
+    },
+}));
+
 
