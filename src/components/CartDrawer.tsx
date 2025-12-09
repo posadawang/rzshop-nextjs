@@ -96,7 +96,27 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 <div key={item.id} className="flex items-center space-x-4 bg-gray-50 p-3 rounded-lg">
                                     <div className="flex-1">
                                         <h4 className="font-medium text-gray-800 line-clamp-1">{item.title}</h4>
-                                        <p className="text-blue-600 font-bold">NT$ {item.price}</p>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <p className="text-blue-600 font-bold">NT$ {item.price}</p>
+
+                                            {/* Quantity Controls */}
+                                            <div className="flex items-center border border-gray-300 rounded-md">
+                                                <button
+                                                    onClick={() => useCartStore.getState().updateQuantity(item.id, item.quantity - 1)}
+                                                    className="px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="px-2 text-sm font-medium">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => useCartStore.getState().updateQuantity(item.id, item.quantity + 1)}
+                                                    className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 p-2">
                                         <Trash2 className="w-5 h-5" />
